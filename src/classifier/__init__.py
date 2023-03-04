@@ -1,0 +1,1 @@
+from classifier.cnn_classifier import CNNClassifier, CNNClassifierInference

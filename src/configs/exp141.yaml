@@ -1,0 +1,97 @@
+general:
+  project_name: rsna_mammo
+  input_path: ../../../data/input
+  output_path: ../../data/output
+  save_name: exp141_1024_640_weighted_batch0125_again
+  seed: &seed 42
+  cv: true
+  wandb_desabled: false
+  fold: [0, 1, 2, 3] # list (0-idx start) or null. set one element list, hold-out mode.
+  n_splits: 4
+
+task:
+  target: cancer
+  extend: png
+  size: 1024
+  bit: 8
+  voi: false
+  
+  height_size: 1024
+  width_size: 640
+
+model:
+  model_name: tf_efficientnetv2_s
+  pretrained: true
+  model_save: &model_save true
+  save_weights_only: true
+  
+  drop_rate: 0.2
+  drop_path_rate: 0.2
+  aug_mix: false
+  
+  train_2nd: false
+  epoch_2nd: 0
+  
+  in_chans: 3
+  mean: [0.5, 0.5, 0.5]
+  std: [0.5, 0.5, 0.5]
+  
+  early_stopping: null
+  early_stopping_patience: null
+  
+  batch_balanced: weighted # oversampling, undersampling, weighted, null
+  minor_weight: 0.125
+  
+  criterion: BCEWithLogitsLoss
+  weighted_loss: null
+  
+  optimizer:
+      name: Adam
+      params:
+        lr: 1.0e-4
+        #weight_decay: 1.0e-2
+
+  scheduler:
+      #name: CosineAnnealingLR
+      #params:
+      #  T_max: 5
+      #  eta_min: 1.0e-5
+      name: OneCycleLR
+      params:
+        pct_start: 0.1
+        div_factor: 1.0e+3
+        max_lr: 1.0e-4
+        epochs: 8
+
+pl_params:
+  max_epochs: 8
+  accelerator: auto
+  accumulate_grad_batches: 4
+  precision: 16 # 16 or 32
+  deterministic: true
+  benchmark: false
+  enable_checkpointing: *model_save
+  enable_model_summary: false
+  enable_progress_bar: true
+  #gradient_clip_val: 1.
+  #limit_train_batches: 0.01 # for debug
+  #limit_val_batches: 0.01 # for debug
+
+train_loader:
+  batch_size: 8
+  shuffle: true
+  num_workers: 2
+  pin_memory: true
+  drop_last: true
+valid_loader:
+  batch_size: 8
+  shuffle: false
+  num_workers: 2
+  pin_memory: true
+  drop_last: false
+test_loader:
+  batch_size: 8
+  shuffle: false
+  num_workers: 2
+  pin_memory: true
+  drop_last: false
